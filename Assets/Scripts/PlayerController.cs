@@ -43,21 +43,24 @@ public class PlayerController : MonoBehaviour
 
         if (controller.isGrounded)
         {
-            direction.y = -2;
             if (SwipeManager.swipeUp)
             {
                 Jump();
 
             }
+            if (SwipeManager.swipeDown && !isSliding)
+            {
+                StartCoroutine(Slide());
+            }
         }
         else
         {
             direction.y += gravity * Time.deltaTime;
-        }
-
-        if (SwipeManager.swipeDown && !isSliding)
-        {
-            StartCoroutine(Slide());
+            if (SwipeManager.swipeDown && !isSliding)
+            {
+                StartCoroutine(Slide());
+                direction.y = -8;
+            }
         }
 
         //Gather Inputs on which Lane we should be. KeyCode.RightArrow
@@ -86,21 +89,23 @@ public class PlayerController : MonoBehaviour
         //transform.position = Vector3.Lerp(transform.position, targetPosition, 500 * Time.deltaTime);
         //controller.center = controller.center;
         // transform.position = targetPosition;
-        if (transform.position == targetPosition)
-            return;
-        Vector3 diff = targetPosition - transform.position;
-        Vector3 moveDir = diff.normalized * 25 * Time.deltaTime;
-        if (moveDir.sqrMagnitude < diff.sqrMagnitude)
-            controller.Move(moveDir);
-        else
-            controller.Move(diff);
+        if (transform.position != targetPosition)
+        {
+            Vector3 diff = targetPosition - transform.position;
+            Vector3 moveDir = diff.normalized * 25 * Time.deltaTime;
+            if (moveDir.sqrMagnitude < diff.sqrMagnitude)
+                controller.Move(moveDir);
+            else
+                controller.Move(diff);
+        }
+       
+
+        // Move Player
+        controller.Move(direction * Time.deltaTime);
     }
 
     private void FixedUpdate()
     {
-        if (!PlayerManager.isGameStarted)
-            return;
-        controller.Move(direction * Time.fixedDeltaTime);
 
     }
     private void Jump()
@@ -113,6 +118,8 @@ public class PlayerController : MonoBehaviour
         if(hit.transform.tag == "Obstacle")
         {
             PlayerManager.gameOver = true;
+            FindObjectOfType<AudioManager>().PlaySound("GameOver");
+
         }
 
     }
